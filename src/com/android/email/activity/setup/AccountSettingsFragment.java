@@ -126,6 +126,7 @@ public class AccountSettingsFragment extends MailAccountPrefsFragment
     private ListPreference mSyncWindow;
     private Preference mSyncSettings;
     private CheckBoxPreference mInboxVibrate;
+    private CheckBoxPreference mInboxNotifyEveryMessage;
     private Preference mInboxRingtone;
 
     private Context mContext;
@@ -394,6 +395,11 @@ public class AccountSettingsFragment extends MailAccountPrefsFragment
             mInboxFolderPreferences.setNotificationVibrateEnabled(vibrateSetting);
             return true;
         } else if (FolderPreferences.PreferenceKeys.NOTIFICATION_RINGTONE.equals(key)) {
+            return true;
+        } else if (FolderPreferences.PreferenceKeys.NOTIFICATION_NOTIFY_EVERY_MESSAGE.equals(key)) {
+            final boolean notifyEveryMessageSetting = (Boolean) newValue;
+            mInboxNotifyEveryMessage.setChecked(notifyEveryMessageSetting);
+            mInboxFolderPreferences.setEveryMessageNotificationEnabled(notifyEveryMessageSetting);
             return true;
         } else {
             // Default behavior, just indicate that the preferences were written
@@ -784,6 +790,10 @@ public class AccountSettingsFragment extends MailAccountPrefsFragment
         final PreferenceCategory notificationsCategory =
                 (PreferenceCategory) findPreference(PREFERENCE_CATEGORY_NOTIFICATIONS);
 
+        mInboxNotifyEveryMessage = (CheckBoxPreference) findPreference(
+                FolderPreferences.PreferenceKeys.NOTIFICATION_NOTIFY_EVERY_MESSAGE);
+        mInboxNotifyEveryMessage.setOnPreferenceChangeListener(this);
+
         if (mInboxFolderPreferences != null) {
             final CheckBoxPreference inboxNotify = (CheckBoxPreference) findPreference(
                 FolderPreferences.PreferenceKeys.NOTIFICATIONS_ENABLED);
@@ -824,6 +834,10 @@ public class AccountSettingsFragment extends MailAccountPrefsFragment
                     mInboxVibrate = null;
                 }
             }
+
+            mInboxNotifyEveryMessage.setChecked(
+                    mInboxFolderPreferences.isEveryMessageNotificationEnabled());
+
         } else {
             notificationsCategory.setEnabled(false);
         }
