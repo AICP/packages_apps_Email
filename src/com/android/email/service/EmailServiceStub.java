@@ -118,10 +118,6 @@ public abstract class EmailServiceStub extends IEmailService.Stub implements IEm
                 account.toString(), extras.toString());
     }
 
-    @Override
-    public void stopSync(long mailboxId) throws RemoteException {
-        // Not required
-    }
     /**
      * Delete a single message by moving it to the trash, or really delete it if it's already in
      * trash or a draft message.
@@ -172,11 +168,7 @@ public abstract class EmailServiceStub extends IEmailService.Stub implements IEm
             cv.put(EmailContent.MessageColumns.MAILBOX_KEY, trashFolder.mId);
              mContext.getContentResolver().update(uri, cv, null, null);
         }
-        try {
-            startSync(mailbox.mId,true,0);
-        } catch (RemoteException e){
-            LogUtils.d(Logging.LOG_TAG,"RemoteException " +e);
-        }
+        requestSync(mailbox.mId,true,0);
     }
 /**
      * Moves messages to a new mailbox.
@@ -227,61 +219,6 @@ public abstract class EmailServiceStub extends IEmailService.Stub implements IEm
      */
     public void setMessageRead(long messageId, boolean isRead) {
         setMessageBoolean(messageId, EmailContent.MessageColumns.FLAG_READ, isRead);
-    }
-
-    @Override
-    public void loadMore(long messageId) throws RemoteException {
-        // Load a message for view...
-        try {
-            // 1. Resample the message, in case it disappeared or synced while
-            // this command was in queue
-            final EmailContent.Message message =
-                EmailContent.Message.restoreMessageWithId(mContext, messageId);
-            if (message == null) {
-                return;
-            }
-            if (message.mFlagLoaded == EmailContent.Message.FLAG_LOADED_COMPLETE) {
-                // We should NEVER get here
-                return;
-            }
-
-            // 2. Open the remote folder.
-            // TODO combine with common code in loadAttachment
-            final Account account = Account.restoreAccountWithId(mContext, message.mAccountKey);
-            final Mailbox mailbox = Mailbox.restoreMailboxWithId(mContext, message.mMailboxKey);
-            if (account == null || mailbox == null) {
-                //mListeners.loadMessageForViewFailed(messageId, "null account or mailbox");
-                return;
-            }
-            TrafficStats.setThreadStatsTag(TrafficFlags.getSyncFlags(mContext, account));
-
-            final Store remoteStore = Store.getInstance(account, mContext);
-            final String remoteServerId;
-            // If this is a search result, use the protocolSearchInfo field to get the
-            // correct remote location
-            if (!TextUtils.isEmpty(message.mProtocolSearchInfo)) {
-                remoteServerId = message.mProtocolSearchInfo;
-            } else {
-                remoteServerId = mailbox.mServerId;
-            }
-            final Folder remoteFolder = remoteStore.getFolder(remoteServerId);
-            remoteFolder.open(OpenMode.READ_WRITE);
-
-            // 3. Set up to download the entire message
-            final Message remoteMessage = remoteFolder.getMessage(message.mServerId);
-            final FetchProfile fp = new FetchProfile();
-            fp.add(FetchProfile.Item.BODY);
-            remoteFolder.fetch(new Message[] { remoteMessage }, fp, null);
-
-            // 4. Write to provider
-            Utilities.copyOneMessageToProvider(mContext, remoteMessage, account, mailbox,
-                    EmailContent.Message.FLAG_LOADED_COMPLETE);
-        } catch (MessagingException me) {
-            if (Logging.LOGD) LogUtils.v(Logging.LOG_TAG, "", me);
-
-        } catch (RuntimeException rte) {
-            LogUtils.d(Logging.LOG_TAG, "RTE During loadMore");
-        }
     }
 
     @Override

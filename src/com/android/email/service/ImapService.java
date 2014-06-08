@@ -135,12 +135,8 @@ public class ImapService extends Service {
             if (accountId <= -1 || inboxId <= -1 ){
                return START_NOT_STICKY;
             }
-            try {
-                mBinder.init(context);
-                mBinder.startSync(inboxId,true,0);
-            } catch (RemoteException e){
-                LogUtils.d(Logging.LOG_TAG,"RemoteException " +e);
-            }
+            mBinder.init(context);
+            mBinder.requestSync(inboxId,true,0);
         } else if (ACTION_DELETE_MESSAGE.equals(action)) {
             final long messageId = intent.getLongExtra(EXTRA_MESSAGE_ID, -1);
             if (Logging.LOGD) {

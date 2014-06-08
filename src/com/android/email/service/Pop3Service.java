@@ -83,12 +83,8 @@ public class Pop3Service extends Service {
                final long inboxId = Mailbox.findMailboxOfType(context, accountId,
                           Mailbox.TYPE_INBOX);
                Log.d(TAG,"inboxId is " + inboxId);
-               try {
-                   mBinder.init(context);
-                   mBinder.startSync(inboxId,true,0);
-               } catch (RemoteException e){
-                   Log.d(TAG,"RemoteException " +e);
-               }
+               mBinder.init(context);
+               mBinder.requestSync(inboxId,true,0);
            }
 
            return Service.START_STICKY;
