@@ -126,6 +126,7 @@ public class AccountSettingsFragment extends MailAccountPrefsFragment
     private ListPreference mSyncWindow;
     private Preference mSyncSettings;
     private CheckBoxPreference mInboxVibrate;
+    private CheckBoxPreference mInboxHeadsUp;
     private CheckBoxPreference mInboxNotifyEveryMessage;
     private Preference mInboxRingtone;
 
@@ -395,6 +396,11 @@ public class AccountSettingsFragment extends MailAccountPrefsFragment
             mInboxFolderPreferences.setNotificationVibrateEnabled(vibrateSetting);
             return true;
         } else if (FolderPreferences.PreferenceKeys.NOTIFICATION_RINGTONE.equals(key)) {
+            return true;
+        } else if (FolderPreferences.PreferenceKeys.NOTIFICATION_HEADS_UP.equals(key)) {
+            final boolean headsUpSetting = (Boolean) newValue;
+            mInboxHeadsUp.setChecked(headsUpSetting);
+            mInboxFolderPreferences.setNotificationHeadsUpEnabled(headsUpSetting);
             return true;
         } else if (FolderPreferences.PreferenceKeys.NOTIFICATION_NOTIFY_EVERY_MESSAGE.equals(key)) {
             final boolean notifyEveryMessageSetting = (Boolean) newValue;
@@ -794,6 +800,10 @@ public class AccountSettingsFragment extends MailAccountPrefsFragment
                 FolderPreferences.PreferenceKeys.NOTIFICATION_NOTIFY_EVERY_MESSAGE);
         mInboxNotifyEveryMessage.setOnPreferenceChangeListener(this);
 
+        mInboxHeadsUp = (CheckBoxPreference) findPreference(
+                FolderPreferences.PreferenceKeys.NOTIFICATION_HEADS_UP);
+        mInboxHeadsUp.setOnPreferenceChangeListener(this);
+
         if (mInboxFolderPreferences != null) {
             final CheckBoxPreference inboxNotify = (CheckBoxPreference) findPreference(
                 FolderPreferences.PreferenceKeys.NOTIFICATIONS_ENABLED);
@@ -837,6 +847,8 @@ public class AccountSettingsFragment extends MailAccountPrefsFragment
 
             mInboxNotifyEveryMessage.setChecked(
                     mInboxFolderPreferences.isEveryMessageNotificationEnabled());
+            mInboxHeadsUp.setChecked(
+                    mInboxFolderPreferences.isNotificationHeadsUpEnabled());
 
         } else {
             notificationsCategory.setEnabled(false);

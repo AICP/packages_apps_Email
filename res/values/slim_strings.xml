@@ -22,4 +22,9 @@
     <string name="account_setup_options_mail_check_frequency_2hour">Every 2 hours</string>
     <string name="account_setup_options_mail_check_frequency_4hour">Every 4 hours</string>
     <string name="account_setup_options_mail_check_frequency_1day">Every day</string>
+
+    <!-- Heads up -->
+    <string name="account_settings_heads_up_label">Enable heads up mode</string>
+    <string name="account_settings_heads_up_summary">Show incoming notification for this account as heads up</string>
+
 </resources>

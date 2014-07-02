@@ -95,6 +95,13 @@
             android:defaultValue="true"
             android:summary="@string/account_settings_notify_summary" />
 
+        <CheckBoxPreference
+            android:key="notification-heads-up"
+            android:dependency="notifications-enabled"
+            android:title="@string/account_settings_heads_up_label"
+            android:defaultValue="true"
+            android:summary="@string/account_settings_heads_up_summary" />
+
         <Preference
             android:key="notification-ringtone"
             android:dependency="notifications-enabled"
