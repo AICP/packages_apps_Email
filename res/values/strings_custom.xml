@@ -42,4 +42,8 @@
     <string name="account_auto_fetch_attachments_entries_wifi">Only over Wi-Fi</string>
     <string name="account_auto_fetch_attachments_entries_always">Always</string>
 
+    <!-- Heads up -->
+    <string name="account_settings_heads_up_label">Enable heads up mode</string>
+    <string name="account_settings_heads_up_summary">Show incoming notification for this account as heads up</string>
+
 </resources>

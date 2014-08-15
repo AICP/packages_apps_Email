@@ -28,11 +28,11 @@ import android.database.ContentObserver;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Process;
 import android.provider.Settings;
-import android.support.v4.app.NotificationCompat;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
 
@@ -77,6 +77,13 @@ public class NotificationController {
     private static final int NOTIFICATION_ID_BASE_SECURITY_NEEDED = 0x30000000;
     private static final int NOTIFICATION_ID_BASE_SECURITY_CHANGED = 0x40000000;
 
+    // Heads up extra flags which are not accessable here.
+    // We use here same flags which are hidden in API19 base. See #android.app.Notification.
+    private static final String EXTRA_AS_HEADS_UP = "headsup";
+    private static final int HEADS_UP_ALLOWED = 1;
+    private static final String EXTRA_HEADS_UP_EXPANDED = "headsupExpanded";
+    private static final int HEADS_UP_EXPANDED = 0;
+
     private static NotificationThread sNotificationThread;
     private static Handler sNotificationHandler;
     private static NotificationController sInstance;
@@ -117,7 +124,7 @@ public class NotificationController {
     }
 
     /**
-     * Returns a {@link android.support.v4.app.NotificationCompat.Builder} for an event with the
+     * Returns a {@link android.app.Notification.Builder} for an event with the
      * given account. The account contains specific rules on ring tone usage and these will be used
      * to modify the notification behaviour.
      *
@@ -132,7 +139,7 @@ public class NotificationController {
      *        to the settings for the given account.
      * @return A {@link Notification} that can be sent to the notification service.
      */
-    private NotificationCompat.Builder createBaseAccountNotificationBuilder(long accountId,
+    private Notification.Builder createBaseAccountNotificationBuilder(long accountId,
             String ticker, CharSequence title, String contentText, Intent intent, Bitmap largeIcon,
             Integer number, boolean enableAudio, boolean ongoing) {
         // Pending Intent
@@ -143,7 +150,7 @@ public class NotificationController {
         }
 
         // NOTE: the ticker is not shown for notifications in the Holo UX
-        final NotificationCompat.Builder builder = new NotificationCompat.Builder(mContext)
+        final Notification.Builder builder = new Notification.Builder(mContext)
                 .setContentTitle(title)
                 .setContentText(contentText)
                 .setContentIntent(pending)
@@ -154,8 +161,10 @@ public class NotificationController {
                 .setTicker(ticker)
                 .setOngoing(ongoing);
 
+        Account account = Account.restoreAccountWithId(mContext, accountId);
+        setHeadsUp(builder, account);
+
         if (enableAudio) {
-            Account account = Account.restoreAccountWithId(mContext, accountId);
             setupSoundAndVibration(builder, account);
         }
 
@@ -174,7 +183,7 @@ public class NotificationController {
      */
     private void showNotification(long accountId, String ticker, String title,
             String contentText, Intent intent, int notificationId) {
-        final NotificationCompat.Builder builder = createBaseAccountNotificationBuilder(accountId,
+        final Notification.Builder builder = createBaseAccountNotificationBuilder(accountId,
                 ticker, title, contentText, intent, null, null, true,
                 needsOngoingNotification(notificationId));
         mNotificationManager.notify(notificationId, builder.build());
@@ -321,9 +330,71 @@ public class NotificationController {
     public static final String EXTRA_CONVERSATION = "conversationUri";
     public static final String EXTRA_FOLDER = "folder";
 
+    private void setHeadsUp(Notification.Builder builder, Account account) {
+        boolean isHeadsUp = false;
+        // Use the Inbox notification preferences
+        final Cursor accountCursor = mContext.getContentResolver().query(EmailProvider.uiUri(
+                "uiaccount", account.mId), UIProvider.ACCOUNTS_PROJECTION, null, null, null);
+
+        com.android.mail.providers.Account uiAccount = null;
+        try {
+            if (accountCursor.moveToFirst()) {
+                uiAccount = new com.android.mail.providers.Account(accountCursor);
+            }
+        } finally {
+            accountCursor.close();
+        }
+
+        if (uiAccount != null) {
+            final Cursor folderCursor =
+                    mContext.getContentResolver().query(uiAccount.settings.defaultInbox,
+                            UIProvider.FOLDERS_PROJECTION, null, null, null);
+
+            if (folderCursor == null) {
+                // This can happen when the notification is for the security policy notification
+                // that happens before the account is setup
+                LogUtils.w(LOG_TAG, "Null folder cursor for mailbox %s",
+                        uiAccount.settings.defaultInbox);
+            } else {
+                Folder folder = null;
+                try {
+                    if (folderCursor.moveToFirst()) {
+                        folder = new Folder(folderCursor);
+                    }
+                } finally {
+                    folderCursor.close();
+                }
+
+                if (folder != null) {
+                    final FolderPreferences folderPreferences = new FolderPreferences(
+                            mContext, uiAccount.getEmailAddress(), folder, true /* inbox */);
+
+                    isHeadsUp = folderPreferences.isNotificationHeadsUpEnabled();
+                } else {
+                    LogUtils.e(LOG_TAG,
+                            "Null folder for mailbox %s", uiAccount.settings.defaultInbox);
+                }
+            }
+        } else {
+            LogUtils.e(LOG_TAG, "Null uiAccount for account id %d", account.mId);
+        }
+
+        if (isHeadsUp) {
+            Bundle extras = new Bundle();
+            // Request a heads up notification if possible
+            // and show as expanded.
+            extras.putInt(EXTRA_AS_HEADS_UP, HEADS_UP_ALLOWED);
+            extras.putInt(EXTRA_HEADS_UP_EXPANDED, HEADS_UP_EXPANDED);
+            builder.setExtras(extras);
+            // Set the priority to high
+            // to force show heads up notification.
+            builder.setPriority(Notification.PRIORITY_HIGH);
+        }
+    }
+
     /** Sets up the notification's sound and vibration based upon account details. */
     private void setupSoundAndVibration(
-            NotificationCompat.Builder builder, Account account) {
+            Notification.Builder builder, Account account) {
         String ringtoneUri = Settings.System.DEFAULT_NOTIFICATION_URI.toString();
         boolean vibrate = false;
 
