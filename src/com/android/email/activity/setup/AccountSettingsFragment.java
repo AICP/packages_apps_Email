@@ -30,7 +30,6 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Vibrator;
-import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
@@ -38,6 +37,7 @@ import android.preference.PreferenceActivity;
 import android.preference.PreferenceCategory;
 import android.preference.Preference.OnPreferenceClickListener;
 import android.preference.PreferenceScreen;
+import android.preference.SwitchPreference;
 import android.provider.CalendarContract;
 import android.provider.ContactsContract;
 import android.provider.Settings;
@@ -125,9 +125,9 @@ public class AccountSettingsFragment extends MailAccountPrefsFragment
     private ListPreference mCheckFrequency;
     private ListPreference mSyncWindow;
     private Preference mSyncSettings;
-    private CheckBoxPreference mInboxVibrate;
-    private CheckBoxPreference mInboxHeadsUp;
-    private CheckBoxPreference mInboxNotifyEveryMessage;
+    private SwitchPreference mInboxVibrate;
+    private SwitchPreference mInboxHeadsUp;
+    private SwitchPreference mInboxNotifyEveryMessage;
     private Preference mInboxRingtone;
 
     private Context mContext;
@@ -781,7 +781,7 @@ public class AccountSettingsFragment extends MailAccountPrefsFragment
             }
         }
 
-        final CheckBoxPreference backgroundAttachments = (CheckBoxPreference)
+        final SwitchPreference backgroundAttachments = (SwitchPreference)
                 findPreference(PREFERENCE_BACKGROUND_ATTACHMENTS);
         if (backgroundAttachments != null) {
             if (!mServiceInfo.offerAttachmentPreload) {
@@ -796,16 +796,16 @@ public class AccountSettingsFragment extends MailAccountPrefsFragment
         final PreferenceCategory notificationsCategory =
                 (PreferenceCategory) findPreference(PREFERENCE_CATEGORY_NOTIFICATIONS);
 
-        mInboxNotifyEveryMessage = (CheckBoxPreference) findPreference(
+        mInboxNotifyEveryMessage = (SwitchPreference) findPreference(
                 FolderPreferences.PreferenceKeys.NOTIFICATION_NOTIFY_EVERY_MESSAGE);
         mInboxNotifyEveryMessage.setOnPreferenceChangeListener(this);
 
-        mInboxHeadsUp = (CheckBoxPreference) findPreference(
+        mInboxHeadsUp = (SwitchPreference) findPreference(
                 FolderPreferences.PreferenceKeys.NOTIFICATION_HEADS_UP);
         mInboxHeadsUp.setOnPreferenceChangeListener(this);
 
         if (mInboxFolderPreferences != null) {
-            final CheckBoxPreference inboxNotify = (CheckBoxPreference) findPreference(
+            final SwitchPreference inboxNotify = (SwitchPreference) findPreference(
                 FolderPreferences.PreferenceKeys.NOTIFICATIONS_ENABLED);
             inboxNotify.setChecked(mInboxFolderPreferences.areNotificationsEnabled());
             inboxNotify.setOnPreferenceChangeListener(this);
@@ -829,7 +829,7 @@ public class AccountSettingsFragment extends MailAccountPrefsFragment
             notificationsCategory.setEnabled(true);
 
             // Set the vibrator value, or hide it on devices w/o a vibrator
-            mInboxVibrate = (CheckBoxPreference) findPreference(
+            mInboxVibrate = (SwitchPreference) findPreference(
                     FolderPreferences.PreferenceKeys.NOTIFICATION_VIBRATE);
             if (mInboxVibrate != null) {
                 mInboxVibrate.setChecked(
@@ -932,12 +932,12 @@ public class AccountSettingsFragment extends MailAccountPrefsFragment
             }
         }
 
-        final CheckBoxPreference syncContacts =
-                (CheckBoxPreference) findPreference(PREFERENCE_SYNC_CONTACTS);
-        final CheckBoxPreference syncCalendar =
-                (CheckBoxPreference) findPreference(PREFERENCE_SYNC_CALENDAR);
-        final CheckBoxPreference syncEmail =
-                (CheckBoxPreference) findPreference(PREFERENCE_SYNC_EMAIL);
+        final SwitchPreference syncContacts =
+                (SwitchPreference) findPreference(PREFERENCE_SYNC_CONTACTS);
+        final SwitchPreference syncCalendar =
+                (SwitchPreference) findPreference(PREFERENCE_SYNC_CALENDAR);
+        final SwitchPreference syncEmail =
+                (SwitchPreference) findPreference(PREFERENCE_SYNC_EMAIL);
         if (syncContacts != null && syncCalendar != null && syncEmail != null) {
             if (mServiceInfo.syncContacts || mServiceInfo.syncCalendar) {
                 if (mServiceInfo.syncContacts) {

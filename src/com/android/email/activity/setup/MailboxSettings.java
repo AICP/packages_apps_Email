@@ -28,12 +28,12 @@ import android.content.res.Resources;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
-import android.preference.CheckBoxPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
+import android.preference.SwitchPreference;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.view.MenuItem;
@@ -235,7 +235,7 @@ public class MailboxSettings extends PreferenceActivity {
         /** The maximum lookback allowed for this mailbox, or 0 if no max. */
         private int mMaxLookback;
 
-        private CheckBoxPreference mSyncEnabledPref;
+        private SwitchPreference mSyncEnabledPref;
         private ListPreference mSyncLookbackPref;
 
         private static Bundle getArguments(long mailboxId) {
@@ -256,7 +256,7 @@ public class MailboxSettings extends PreferenceActivity {
 
             addPreferencesFromResource(R.xml.mailbox_preferences);
 
-            mSyncEnabledPref = (CheckBoxPreference) findPreference(PREF_SYNC_ENABLED_KEY);
+            mSyncEnabledPref = (SwitchPreference) findPreference(PREF_SYNC_ENABLED_KEY);
             mSyncLookbackPref = (ListPreference) findPreference(PREF_SYNC_WINDOW_KEY);
 
             mSyncLookbackPref.setOnPreferenceChangeListener(mPreferenceChanged);
